@@ -118,7 +118,7 @@ const browserScreenshot = false;
 ```
 [Go to code](https://github.com/D3vl0per/Valorant-watcher/blob/12dce8065423861971b7088563ad936b2dcc2559/app.js#L27)
 
-## Donation - this is the orinal creator donation
+## Donation - this is the original creator donation
 Please donate to keep alive this project!
 
 Especially the drop farmers who gather tons of money with this software!🤓  
