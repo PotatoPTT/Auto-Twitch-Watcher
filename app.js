@@ -11,6 +11,7 @@ var run = true;
 var firstRun = true;
 var cookie = null;
 var streamers = null;
+var resUndef = false //resolution in channel undefined
 
 //var min = dayjs.duration({'days' : 1});
 var time = dayjs().format('HH:mm:ss');
@@ -26,12 +27,12 @@ const baseUrl = 'https://www.twitch.tv/';
 const watchr6 = 'R6EsportsBR2';
 const drops = 'drops/inventory'
 const userAgent = (process.env.userAgent || 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/78.0.3904.108 Safari/537.36');
-const streamersUrl = (process.env.streamersUrl || "https://www.twitch.tv/directory/game/Tom%20Clancy's%20Rainbow%20Six%20Siege?tl=c2542d6d-cd10-4532-919b-3d19f30a768b");//EDIT GAME HERE
+const streamersUrl = (process.env.streamersUrl || "https://www.twitch.tv/directory/game/Tom%20Clancy's%20Rainbow%20Six%20Siege?tl=c2542d6d-cd10-4532-919b-3d19f30a768b"); //Stream Drop URL
 
 const scrollDelay = (Number(process.env.scrollDelay) || 2000);
 const scrollTimes = (Number(process.env.scrollTimes) || 2);
 
-const minWatching = (Number(process.env.minWatching) || 15); // Minutes
+const minWatching = (Number(process.env.minWatching) || 15); //Minutes Default: 15
 const maxWatching = (Number(process.env.maxWatching) || 15); //Minutes
 
 const streamerListRefresh = (Number(process.env.streamerListRefresh) || 30);
@@ -44,9 +45,9 @@ const showBrowser = false; // false state equ headless mode;
 const proxy = (process.env.proxy || ""); // "ip:port" By https://github.com/Jan710
 const proxyAuth = (process.env.proxyAuth || "");
 
-const browserScreenshot = (process.env.browserScreenshot || true);
+const browserScreenshot = (process.env.browserScreenshot || false);
 
-const browserClean = 10;
+const browserClean = 12;
 const browserCleanUnit = 'hour';
 
 var browserConfig = {
@@ -65,8 +66,8 @@ var browserConfig = {
 const cookiePolicyQuery = 'button[data-a-target="consent-banner-accept"]';
 const matureContentQuery = 'button[data-a-target="player-overlay-mature-accept"]';
 const sidebarQuery = '*[data-test-selector="user-menu__toggle"]';
-const userStatusQuery = 'span[data-a-target="presence-text"]';
-const channelsQuery = 'a[data-test-selector*="TitleAndChannel"]';//Edit 20/07/22
+//const userStatusQuery = 'span[data-a-target="presence-text"]';
+const channelsQuery = 'a[data-test-selector*="TitleAndChannel"]'; //FIXED
 const streamPauseQuery = 'button[data-a-target="player-play-pause-button"]';
 const streamSettingsQuery = '[data-a-target="player-settings-button"]';
 const streamQualitySettingQuery = '[data-a-target="player-settings-menu-item-quality"]';
@@ -98,7 +99,7 @@ async function viewRandomPage(browser, page) {
       let watch;
 
       if (watchAlwaysTopStreamer) {
-          watch = streamers[0];
+          watch = streamers[0]; //NEED WORK BUT WORKING
       } else {
          watch = streamers[getRandomInt(0, streamers.length - 1)];
          //watch = watchr6; //https://github.com/D3vl0per/Valorant-watcher/issues/27
@@ -112,7 +113,7 @@ async function viewRandomPage(browser, page) {
              }
          }
       }
-      var sleep = getRandomInt(minWatching, maxWatching) * 60000; //Set watuching timer
+      var sleep = getRandomInt(minWatching, maxWatching) * 60000; //Set timer
 	  
       console.log('🔭 Colecting Drops')
 	  
@@ -121,9 +122,8 @@ async function viewRandomPage(browser, page) {
 	  })
 	  
 	  await clickWhenExist(page, ClaimDropQuery);
-	  setTimeout(() => {  console.log(); }, 8000);
 		
-      console.log('\n🔗 Now watching streamer: ', baseUrl + watch);
+      console.log('🔗 Now watching streamer: ', baseUrl + watch);
 
       await page.goto(baseUrl + watch, {
         "waitUntil": "networkidle2"
@@ -132,16 +132,13 @@ async function viewRandomPage(browser, page) {
       await clickWhenExist(page, cookiePolicyQuery);
       await clickWhenExist(page, matureContentQuery); //Click on accept button
 
-      if (firstRun) {
+      if (firstRun || resUndef) {
         console.log('🔧 Setting lowest possible resolution..');
         await clickWhenExist(page, streamPauseQuery);
-		setTimeout(() => {  console.log(""); }, 4000);
 
         await clickWhenExist(page, streamSettingsQuery);
-        setTimeout(() => {  console.log(); }, 4000);
 
         await clickWhenExist(page, streamQualitySettingQuery);
-        setTimeout(() => {  console.log(); }, 4000);
 
        try{
 	   var resolution = await queryOnWebsite(page, streamQualityQuery);
@@ -149,10 +146,14 @@ async function viewRandomPage(browser, page) {
         await page.evaluate((resolution) => {
           document.getElementById(resolution).click();
         }, resolution);
+		resUndef = false
 		}catch(e){
-    if(e){
-    setTimeout(() => {  console.log("error"); }, 2000)
+			if(e){
+	resUndef = true
+	sleep = 5 * 60000
+    setTimeout(() => {  console.log("\n❌Error! No channels with drops at the moment, it will try again in 5 minutes❌\n"); }, 2000)
     }
+    
 }
 
         await clickWhenExist(page, streamPauseQuery);
@@ -175,18 +176,19 @@ async function viewRandomPage(browser, page) {
         console.log('📸 Screenshot created: ' + `${watch}.png`);
       }
 
-      await clickWhenExist(page, sidebarQuery); //Open sidebar
-      await page.waitFor(userStatusQuery); //Waiting for sidebar
-      let status = await queryOnWebsite(page, userStatusQuery); //status jQuery
-      await clickWhenExist(page, sidebarQuery); //Close sidebar
-
+//		try{
+//      await clickWhenExist(page, sidebarQuery); //Open sidebar
+//      await page.waitFor(userStatusQuery); //Waiting for sidebar
+//      let status = await queryOnWebsite(page, userStatusQuery); //status jQuery    //NOT WORKING ANYMORE
+//      await clickWhenExist(page, sidebarQuery); //Close sidebar
+//		}
       await page.reload({
         "waitUntil": "networkidle2"
       });
-
-      console.log('💡 Account status:', status[0] ? status[0].children[0].data : "Unknown");
+//
+//      console.log('💡 Account status:', status[0] ? status[0].children[0].data : "Unknown");   //NOT WORKING ANYMORE
 	  console.log("🕒 Time: " + dayjs().format('HH:mm:ss'));
-      console.log('💤 Watching stream for ' + sleep / 60000 + ' minutes\n');
+      console.log('💤 Watching stream for ' + sleep / 60000 + ' minutes');
 
       await page.waitFor(sleep);
 	  
