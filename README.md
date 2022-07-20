@@ -54,8 +54,10 @@ Modified by PTT to barely work and new *autocollect* feature
 ## Docker
 <p align="center">
 NEED TO CREATE YOUR OWN IMAGE FROM THE FOLDER
-**docker build -t r6watcher .**
+</p><p align="center">
+<b>docker build -t r6watcher .</b>
 </p>
+
 
 
 <s>>Docker is a set of platform as a service (PaaS) products that uses OS-level virtualization to deliver software in packages called containers. Containers are isolated from one another and bundle their own software, libraries and configuration files. All containers are run by a single operating system kernel and therefore use fewer resources than virtual machines.
