@@ -188,7 +188,7 @@ async function viewRandomPage(browser, page) {
 //
 //      console.log('💡 Account status:', status[0] ? status[0].children[0].data : "Unknown");   //NOT WORKING ANYMORE
 	  console.log("🕒 Time: " + dayjs().format('HH:mm:ss'));
-      console.log('💤 Watching stream for ' + sleep / 60000 + ' minutes');
+      console.log('💤 Watching stream for ' + sleep / 60000 + ' minutes\n');
 
       await page.waitFor(sleep);
 	  
