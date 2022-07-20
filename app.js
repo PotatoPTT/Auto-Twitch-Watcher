@@ -26,7 +26,7 @@ const baseUrl = 'https://www.twitch.tv/';
 const watchr6 = 'R6EsportsBR2';
 const drops = 'drops/inventory'
 const userAgent = (process.env.userAgent || 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/78.0.3904.108 Safari/537.36');
-const streamersUrl = (process.env.streamersUrl || "https://www.twitch.tv/directory/game/Tom%20Clancy's%20Rainbow%20Six%20Siege?tl=c2542d6d-cd10-4532-919b-3d19f30a768b");
+const streamersUrl = (process.env.streamersUrl || "https://www.twitch.tv/directory/game/Tom%20Clancy's%20Rainbow%20Six%20Siege?tl=c2542d6d-cd10-4532-919b-3d19f30a768b");//EDIT GAME HERE
 
 const scrollDelay = (Number(process.env.scrollDelay) || 2000);
 const scrollTimes = (Number(process.env.scrollTimes) || 2);
@@ -66,7 +66,7 @@ const cookiePolicyQuery = 'button[data-a-target="consent-banner-accept"]';
 const matureContentQuery = 'button[data-a-target="player-overlay-mature-accept"]';
 const sidebarQuery = '*[data-test-selector="user-menu__toggle"]';
 const userStatusQuery = 'span[data-a-target="presence-text"]';
-const channelsQuery = 'a[data-test-selector*="ChannelLink"]';
+const channelsQuery = 'a[data-test-selector*="TitleAndChannel"]';//Edit 20/07/22
 const streamPauseQuery = 'button[data-a-target="player-play-pause-button"]';
 const streamSettingsQuery = '[data-a-target="player-settings-button"]';
 const streamQualitySettingQuery = '[data-a-target="player-settings-menu-item-quality"]';
