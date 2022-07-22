@@ -11,7 +11,8 @@ var run = true;
 var firstRun = true;
 var cookie = null;
 var streamers = null;
-var resUndef = false //resolution in channel undefined
+var resUndef = false; //resolution in channel undefined
+var getNewStreamer = false; //forces new streamer
 
 //var min = dayjs.duration({'days' : 1});
 var time = dayjs().format('HH:mm:ss');
@@ -21,18 +22,22 @@ var time = dayjs().format('HH:mm:ss');
 //var currentDate = new Date();
 //var futureDate = new Date(currentDate.getTime() + minutesToAdd*60000);
 // ========================================== CONFIG SECTION =================================================================
-const configPath = './config.json'
+const configPath = './config.json';
 const screenshotFolder = './screenshots/';
 const baseUrl = 'https://www.twitch.tv/';
 const watchr6 = 'R6EsportsBR2';
-const drops = 'drops/inventory'
+const drops = 'drops/inventory';
 const userAgent = (process.env.userAgent || 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/78.0.3904.108 Safari/537.36');
-const streamersUrl = (process.env.streamersUrl || "https://www.twitch.tv/directory/game/Tom%20Clancy's%20Rainbow%20Six%20Siege?tl=c2542d6d-cd10-4532-919b-3d19f30a768b"); //Stream Drop URL
+
+var currentUrl = ("");
+const streamersUrl = (process.env.streamersUrl || "https://www.twitch.tv/directory/game/Tom%20Clancy's%20Rainbow%20Six%20Siege?tl=c2542d6d-cd10-4532-919b-3d19f30a768b"); //https://www.twitch.tv/directory/game/VALORANT?tl=c2542d6d-cd10-4532-919b-3d19f30a768b
+const watchAlt = false;//watch second game if no streamers
+const altstreamersUrl = (process.env.streamersUrl || "your alt game url here");
 
 const scrollDelay = (Number(process.env.scrollDelay) || 2000);
 const scrollTimes = (Number(process.env.scrollTimes) || 2);
 
-const minWatching = (Number(process.env.minWatching) || 15); //Minutes Default: 15
+const minWatching = (Number(process.env.minWatching) || 15); // Minutes 15
 const maxWatching = (Number(process.env.maxWatching) || 15); //Minutes
 
 const streamerListRefresh = (Number(process.env.streamerListRefresh) || 30);
@@ -65,9 +70,9 @@ var browserConfig = {
 
 const cookiePolicyQuery = 'button[data-a-target="consent-banner-accept"]';
 const matureContentQuery = 'button[data-a-target="player-overlay-mature-accept"]';
-const sidebarQuery = '*[data-test-selector="user-menu__toggle"]';
+//const sidebarQuery = '*[data-test-selector="user-menu__toggle"]';
 //const userStatusQuery = 'span[data-a-target="presence-text"]';
-const channelsQuery = 'a[data-test-selector*="TitleAndChannel"]'; //FIXED
+const channelsQuery = 'a[data-test-selector*="TitleAndChannel"]';
 const streamPauseQuery = 'button[data-a-target="player-play-pause-button"]';
 const streamSettingsQuery = '[data-a-target="player-settings-button"]';
 const streamQualitySettingQuery = '[data-a-target="player-settings-menu-item-quality"]';
@@ -91,7 +96,7 @@ async function viewRandomPage(browser, page) {
         browser_last_refresh = dayjs().add(browserClean, browserCleanUnit);
       }
 
-      if (dayjs(streamer_last_refresh).isBefore(dayjs())) {
+      if (dayjs(streamer_last_refresh).isBefore(dayjs()) || getNewStreamer) {
         await getAllStreamer(page); //Call getAllStreamer function and refresh the list
         streamer_last_refresh = dayjs().add(streamerListRefresh, streamerListRefreshUnit); //https://github.com/D3vl0per/Valorant-watcher/issues/25
       }
@@ -99,7 +104,7 @@ async function viewRandomPage(browser, page) {
       let watch;
 
       if (watchAlwaysTopStreamer) {
-          watch = streamers[0]; //NEED WORK BUT WORKING
+          watch = streamers[0];
       } else {
          watch = streamers[getRandomInt(0, streamers.length - 1)];
          //watch = watchr6; //https://github.com/D3vl0per/Valorant-watcher/issues/27
@@ -113,7 +118,7 @@ async function viewRandomPage(browser, page) {
              }
          }
       }
-      var sleep = getRandomInt(minWatching, maxWatching) * 60000; //Set timer
+      var sleep = getRandomInt(minWatching, maxWatching) * 60000; //Set watching timer
 	  
       console.log('🔭 Colecting Drops')
 	  
@@ -150,8 +155,17 @@ async function viewRandomPage(browser, page) {
 		}catch(e){
 			if(e){
 	resUndef = true
-	sleep = 5 * 60000
-    setTimeout(() => {  console.log("\n❌Error! No channels with drops at the moment, it will try again in 5 minutes❌\n"); }, 2000)
+    if (currentUrl == streamersUrl && watchAlt){
+      currentUrl = altstreamersUrl
+      getNewStreamer = true
+      sleep = 0 * 60000
+      setTimeout(() => {  console.log("\n❌Error! No channels with drops for the first option!❌\n"); }, 2000)
+    } 
+    else {
+      setTimeout(() => {  console.log("\n❌Error! No channels with drops at the moment, it will try again in 5 minutes❌\n"); }, 2000)
+      currentUrl = streamersUrl
+      sleep = 5 * 60000
+    }
     }
     
 }
@@ -185,10 +199,12 @@ async function viewRandomPage(browser, page) {
       await page.reload({
         "waitUntil": "networkidle2"
       });
-//
-//      console.log('💡 Account status:', status[0] ? status[0].children[0].data : "Unknown");   //NOT WORKING ANYMORE
-	  console.log("🕒 Time: " + dayjs().format('HH:mm:ss'));
-      console.log('💤 Watching stream for ' + sleep / 60000 + ' minutes\n');
+if (getNewStreamer == false) {
+//console.log('💡 Account status:', status[0] ? status[0].children[0].data : "Unknown");   //NOT WORKING ANYMORE
+  console.log("🕒 Time: " + dayjs().format('HH:mm:ss'));
+  console.log('💤 Watching stream for ' + sleep / 60000 + ' minutes\n');
+}
+
 
       await page.waitFor(sleep);
 	  
@@ -262,6 +278,9 @@ async function readLoginData() {
 
 
 async function spawnBrowser() {
+
+  currentUrl = streamersUrl;
+
   console.log("=========================");
   console.log('📱 Launching browser...');
   var browser = await puppeteer.launch(browserConfig);
@@ -292,12 +311,15 @@ async function spawnBrowser() {
 
 
 async function getAllStreamer(page) {
-  console.log("=========================");
-  await page.goto(streamersUrl, {
+
+  if (getNewStreamer == false){
+  console.log("=========================");}
+  await page.goto(currentUrl, {
     "waitUntil": "networkidle0"
   });
+  if (getNewStreamer == false){
   console.log('🔐 Checking login...');
-  await checkLogin(page);
+  await checkLogin(page);}
   console.log('📡 Checking active streamers...');
   await scroll(page, scrollTimes);
   const jquery = await queryOnWebsite(page, channelsQuery);
@@ -308,12 +330,16 @@ async function getAllStreamer(page) {
   for (var i = 0; i < jquery.length; i++) {
     streamers[i] = jquery[i].attribs.href.split("/")[1];
   }
+
+  getNewStreamer = false
+
   return;
 }
 
 
 
 async function checkLogin(page) {
+  
   let cookieSetByServer = await page.cookies();
   for (var i = 0; i < cookieSetByServer.length; i++) {
     if (cookieSetByServer[i].name == 'twilight-user') {
@@ -418,7 +444,6 @@ async function main() {
   } = await spawnBrowser();
   await getAllStreamer(page);
   console.log("=========================");
-  console.log('');
   await viewRandomPage(browser, page);
 };
 
