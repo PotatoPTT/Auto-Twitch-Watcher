@@ -107,7 +107,7 @@ async function viewRandomPage(browser, page) {
       await clickWhenExist(page, ClaimDropQuery);
       var hasDrops = await queryOnWebsite(page, DropCheck);
 
-      if (hasDrops?.attribs?.href) {
+      if (hasDrops && hasDrops.attribs) {
         hasDrops = hasDrops[hasDrops.length - 1].attribs.href;
         console.log('✅Drops available✅');
         currentUrl = hasDrops;
