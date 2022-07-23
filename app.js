@@ -13,6 +13,7 @@ var cookie = null;
 var streamers = null;
 var resUndef = false; //resolution in channel undefined
 var getNewStreamer = false; //forces new streamer
+var dropSkip = false;
 
 //var min = dayjs.duration({'days' : 1});
 var time = dayjs().format('HH:mm:ss');
@@ -24,15 +25,15 @@ var time = dayjs().format('HH:mm:ss');
 // ========================================== CONFIG SECTION =================================================================
 const configPath = './config.json';
 const screenshotFolder = './screenshots/';
-const baseUrl = 'https://www.twitch.tv/';
-const watchr6 = 'R6EsportsBR2';
-const drops = 'drops/inventory';
+const baseUrl = 'https://www.twitch.tv';
+const watchr6 = '/R6EsportsBR2';
+const drops = '/drops/inventory';
 const userAgent = (process.env.userAgent || 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/78.0.3904.108 Safari/537.36');
 
 var currentUrl = ("");
-const streamersUrl = (process.env.streamersUrl || "https://www.twitch.tv/directory/game/Tom%20Clancy's%20Rainbow%20Six%20Siege?tl=c2542d6d-cd10-4532-919b-3d19f30a768b"); //https://www.twitch.tv/directory/game/VALORANT?tl=c2542d6d-cd10-4532-919b-3d19f30a768b
-const watchAlt = false;//watch second game if no streamers
-const altstreamersUrl = (process.env.streamersUrl || "your alt game url here");
+const streamersUrl = (process.env.streamersUrl || "/directory/game/Tom%20Clancy's%20Rainbow%20Six%20Siege?tl=c2542d6d-cd10-4532-919b-3d19f30a768b"); //https://www.twitch.tv/directory/game/VALORANT?tl=c2542d6d-cd10-4532-919b-3d19f30a768b
+const watchAlt = false; //if want second game to watch
+const altstreamersUrl = (process.env.streamersUrl || "game url here");
 
 const scrollDelay = (Number(process.env.scrollDelay) || 2000);
 const scrollTimes = (Number(process.env.scrollTimes) || 2);
@@ -79,6 +80,7 @@ const streamQualitySettingQuery = '[data-a-target="player-settings-menu-item-qua
 const streamQualityQuery = 'input[data-a-target="tw-radio"]';
 
 const ClaimDropQuery = 'button[data-test-selector="DropsCampaignInProgressRewardPresentation-claim-button"]';
+var DropCheck = 'a[data-test-selector*="DropsCampaignInProgressDescription-no-channels-hint-text"]';
 // ========================================== CONFIG SECTION =================================================================
 
 
@@ -95,8 +97,22 @@ async function viewRandomPage(browser, page) {
         firstRun = true;
         browser_last_refresh = dayjs().add(browserClean, browserCleanUnit);
       }
+      console.log('🔭 Colecting Drops')
+	  
+	  await page.goto(baseUrl + drops, {
+        "waitUntil": "networkidle0"
+	  })
+	  
+	  await clickWhenExist(page, ClaimDropQuery);
 
-      if (dayjs(streamer_last_refresh).isBefore(dayjs()) || getNewStreamer) {
+    var hasDrops = await queryOnWebsite(page, DropCheck);
+    hasDrops = hasDrops[hasDrops.length - 1].attribs.href;
+    
+    if (hasDrops.length > 1 || dropSkip==false){
+      console.log('✅Drops available✅');
+    currentUrl = hasDrops;}
+
+      if (dayjs(streamer_last_refresh).isBefore(dayjs()) || getNewStreamer || firstRun) {
         await getAllStreamer(page); //Call getAllStreamer function and refresh the list
         streamer_last_refresh = dayjs().add(streamerListRefresh, streamerListRefreshUnit); //https://github.com/D3vl0per/Valorant-watcher/issues/25
       }
@@ -120,17 +136,12 @@ async function viewRandomPage(browser, page) {
       }
       var sleep = getRandomInt(minWatching, maxWatching) * 60000; //Set watching timer
 	  
-      console.log('🔭 Colecting Drops')
-	  
-	  await page.goto(baseUrl + drops, {
-        "waitUntil": "networkidle0"
-	  })
-	  
-	  await clickWhenExist(page, ClaimDropQuery);
+      
+    if (hasDrops.length > 1 || dropSkip){
 		
-      console.log('🔗 Now watching streamer: ', baseUrl + watch);
+      console.log('🔗 Now watching streamer: ', baseUrl + '/' + watch);
 
-      await page.goto(baseUrl + watch, {
+      await page.goto(baseUrl + '/' + watch, {
         "waitUntil": "networkidle2"
       }); //https://github.com/puppeteer/puppeteer/blob/master/docs/api.md#pagegobackoptions
 
@@ -162,13 +173,13 @@ async function viewRandomPage(browser, page) {
       setTimeout(() => {  console.log("\n❌Error! No channels with drops for the first option!❌\n"); }, 2000)
     } 
     else {
-      setTimeout(() => {  console.log("\n❌Error! No channels with drops at the moment, it will try again in 5 minutes❌\n"); }, 2000)
+      setTimeout(() => {  console.log("\n❌Error! No channels with drops at the moment, it will try again in 10 minutes❌\n"); }, 2000)
       currentUrl = streamersUrl
-      sleep = 5 * 60000
+      sleep = 10 * 60000
     }
-    }
+    }}
     
-}
+
 
         await clickWhenExist(page, streamPauseQuery);
 
@@ -198,7 +209,13 @@ async function viewRandomPage(browser, page) {
 //		}
       await page.reload({
         "waitUntil": "networkidle2"
-      });
+      })
+      dropSkip=false}
+      else {
+        dropSkip=true
+        console.log('\n❌No Drops Available, Waiting 30 Minutes❌\n');
+        sleep = 30 * 60000
+      }
 if (getNewStreamer == false) {
 //console.log('💡 Account status:', status[0] ? status[0].children[0].data : "Unknown");   //NOT WORKING ANYMORE
   console.log("🕒 Time: " + dayjs().format('HH:mm:ss'));
@@ -314,7 +331,7 @@ async function getAllStreamer(page) {
 
   if (getNewStreamer == false){
   console.log("=========================");}
-  await page.goto(currentUrl, {
+  await page.goto(baseUrl + currentUrl, {
     "waitUntil": "networkidle0"
   });
   if (getNewStreamer == false){
@@ -442,7 +459,7 @@ async function main() {
     browser,
     page
   } = await spawnBrowser();
-  await getAllStreamer(page);
+//  await getAllStreamer(page);
   console.log("=========================");
   await viewRandomPage(browser, page);
 };
