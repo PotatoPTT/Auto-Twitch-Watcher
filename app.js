@@ -15,6 +15,7 @@ var resUndef = false; //resolution in channel undefined
 var getNewStreamer = false; //forces new streamer
 var dropSkip = false;
 
+
 //var min = dayjs.duration({'days' : 1});
 var time = dayjs().format('HH:mm:ss');
 //var futuretime = time.add(min);
@@ -32,8 +33,8 @@ const userAgent = (process.env.userAgent || 'Mozilla/5.0 (X11; Linux x86_64) App
 
 var currentUrl = ("");
 const streamersUrl = (process.env.streamersUrl || "/directory/game/Tom%20Clancy's%20Rainbow%20Six%20Siege?tl=c2542d6d-cd10-4532-919b-3d19f30a768b"); //https://www.twitch.tv/directory/game/VALORANT?tl=c2542d6d-cd10-4532-919b-3d19f30a768b
-const watchAlt = false; //If you want a second game to watch
-const altstreamersUrl = (process.env.streamersUrl || "game url here");
+const watchAlt = false;//if u want 2 see > 1 game
+const altstreamersUrl = (process.env.streamersUrl || "your game here");
 
 const scrollDelay = (Number(process.env.scrollDelay) || 2000);
 const scrollTimes = (Number(process.env.scrollTimes) || 2);
@@ -80,7 +81,7 @@ const streamQualitySettingQuery = '[data-a-target="player-settings-menu-item-qua
 const streamQualityQuery = 'input[data-a-target="tw-radio"]';
 
 const ClaimDropQuery = 'button[data-test-selector="DropsCampaignInProgressRewardPresentation-claim-button"]';
-var DropCheck = 'a[data-test-selector*="DropsCampaignInProgressDescription-no-channels-hint-text"]';
+var DropCheck = 'a[data-test-selector="DropsCampaignInProgressDescription-no-channels-hint-text"]';
 // ========================================== CONFIG SECTION =================================================================
 
 
@@ -102,43 +103,44 @@ async function viewRandomPage(browser, page) {
       await page.goto(baseUrl + drops, {
         "waitUntil": "networkidle0"
       })
-
+      var hasDrops = 0;
       await clickWhenExist(page, ClaimDropQuery);
-
       var hasDrops = await queryOnWebsite(page, DropCheck);
-      hasDrops = hasDrops[hasDrops.length - 1].attribs.href;
 
-      if (hasDrops.length > 1 || dropSkip == false) {
+      if (hasDrops?.attribs?.href) {
+        hasDrops = hasDrops[hasDrops.length - 1].attribs.href;
         console.log('✅Drops available✅');
         currentUrl = hasDrops;
-      }
-
-      if (dayjs(streamer_last_refresh).isBefore(dayjs()) || getNewStreamer || firstRun) {
-        await getAllStreamer(page); //Call getAllStreamer function and refresh the list
-        streamer_last_refresh = dayjs().add(streamerListRefresh, streamerListRefreshUnit); //https://github.com/D3vl0per/Valorant-watcher/issues/25
-      }
-
-      let watch;
-
-      if (watchAlwaysTopStreamer) {
-        watch = streamers[0];
       } else {
-        watch = streamers[getRandomInt(0, streamers.length - 1)];
-        //watch = watchr6; //https://github.com/D3vl0per/Valorant-watcher/issues/27
+        hasDrops = 0;
       }
 
-      if (channelsWithPriority.length > - 1) {
-        for (let i = 0; i < channelsWithPriority.length; i++) {
-          if (streamers.includes(channelsWithPriority[i])) {
-            watch = channelsWithPriority[i];
-            break;
+      if (hasDrops > 1 || dropSkip || firstRun) {
+
+
+        if (dayjs(streamer_last_refresh).isBefore(dayjs()) || getNewStreamer || firstRun) {
+          await getAllStreamer(page); //Call getAllStreamer function and refresh the list
+          streamer_last_refresh = dayjs().add(streamerListRefresh, streamerListRefreshUnit); //https://github.com/D3vl0per/Valorant-watcher/issues/25
+        }
+
+        let watch;
+
+        if (watchAlwaysTopStreamer) {
+          watch = streamers[0];
+        } else {
+          watch = streamers[getRandomInt(0, streamers.length - 1)];
+          //watch = watchr6; //https://github.com/D3vl0per/Valorant-watcher/issues/27
+        }
+
+        if (channelsWithPriority.length > - 1) {
+          for (let i = 0; i < channelsWithPriority.length; i++) {
+            if (streamers.includes(channelsWithPriority[i])) {
+              watch = channelsWithPriority[i];
+              break;
+            }
           }
         }
-      }
-      var sleep = getRandomInt(minWatching, maxWatching) * 60000; //Set watching timer
-
-
-      if (hasDrops.length > 1 || dropSkip) {
+        var sleep = getRandomInt(minWatching, maxWatching) * 60000; //Set watching timer
 
         console.log('🔗 Now watching streamer: ', baseUrl + '/' + watch);
 
