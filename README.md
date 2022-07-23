@@ -1,7 +1,7 @@
 
 
 
-<h1 align="center">Twitch Watcher</h1>
+<h1 align="center">Auto Twitch Watcher</h1>
 <p align="center"> Same thing as the Valorant(https://github.com/D3vl0per/Twitch-watcher) one but for Twitch in general... and it auto collects drops</p>
 <p align="center">
 Modified by PTT to barely work and new *autocollect* feature
