@@ -32,7 +32,7 @@ const userAgent = (process.env.userAgent || 'Mozilla/5.0 (X11; Linux x86_64) App
 
 var currentUrl = ("");
 const streamersUrl = (process.env.streamersUrl || "/directory/game/Tom%20Clancy's%20Rainbow%20Six%20Siege?tl=c2542d6d-cd10-4532-919b-3d19f30a768b"); //https://www.twitch.tv/directory/game/VALORANT?tl=c2542d6d-cd10-4532-919b-3d19f30a768b
-const watchAlt = false; //if want second game to watch
+const watchAlt = false; //If you want a second game to watch
 const altstreamersUrl = (process.env.streamersUrl || "game url here");
 
 const scrollDelay = (Number(process.env.scrollDelay) || 2000);
@@ -44,7 +44,7 @@ const maxWatching = (Number(process.env.maxWatching) || 15); //Minutes
 const streamerListRefresh = (Number(process.env.streamerListRefresh) || 30);
 const streamerListRefreshUnit = (process.env.streamerListRefreshUnit || 'minutes'); //https://day.js.org/docs/en/manipulate/add
 
-const channelsWithPriority = (process.env.channelsWithPriority || '') ;
+const channelsWithPriority = (process.env.channelsWithPriority || '');
 const watchAlwaysTopStreamer = (process.env.watchAlwaysTopStreamer || true);
 
 const showBrowser = false; // false state equ headless mode;
@@ -98,19 +98,20 @@ async function viewRandomPage(browser, page) {
         browser_last_refresh = dayjs().add(browserClean, browserCleanUnit);
       }
       console.log('🔭 Colecting Drops')
-	  
-	  await page.goto(baseUrl + drops, {
-        "waitUntil": "networkidle0"
-	  })
-	  
-	  await clickWhenExist(page, ClaimDropQuery);
 
-    var hasDrops = await queryOnWebsite(page, DropCheck);
-    hasDrops = hasDrops[hasDrops.length - 1].attribs.href;
-    
-    if (hasDrops.length > 1 || dropSkip==false){
-      console.log('✅Drops available✅');
-    currentUrl = hasDrops;}
+      await page.goto(baseUrl + drops, {
+        "waitUntil": "networkidle0"
+      })
+
+      await clickWhenExist(page, ClaimDropQuery);
+
+      var hasDrops = await queryOnWebsite(page, DropCheck);
+      hasDrops = hasDrops[hasDrops.length - 1].attribs.href;
+
+      if (hasDrops.length > 1 || dropSkip == false) {
+        console.log('✅Drops available✅');
+        currentUrl = hasDrops;
+      }
 
       if (dayjs(streamer_last_refresh).isBefore(dayjs()) || getNewStreamer || firstRun) {
         await getAllStreamer(page); //Call getAllStreamer function and refresh the list
@@ -120,112 +121,114 @@ async function viewRandomPage(browser, page) {
       let watch;
 
       if (watchAlwaysTopStreamer) {
-          watch = streamers[0];
+        watch = streamers[0];
       } else {
-         watch = streamers[getRandomInt(0, streamers.length - 1)];
-         //watch = watchr6; //https://github.com/D3vl0per/Valorant-watcher/issues/27
+        watch = streamers[getRandomInt(0, streamers.length - 1)];
+        //watch = watchr6; //https://github.com/D3vl0per/Valorant-watcher/issues/27
       }
 
-      if (channelsWithPriority.length > - 1 ) {
-          for (let i = 0; i < channelsWithPriority.length; i++) {
-              if (streamers.includes(channelsWithPriority[i])) {
-                  watch = channelsWithPriority[i];
-                  break;
-             }
-         }
+      if (channelsWithPriority.length > - 1) {
+        for (let i = 0; i < channelsWithPriority.length; i++) {
+          if (streamers.includes(channelsWithPriority[i])) {
+            watch = channelsWithPriority[i];
+            break;
+          }
+        }
       }
       var sleep = getRandomInt(minWatching, maxWatching) * 60000; //Set watching timer
-	  
-      
-    if (hasDrops.length > 1 || dropSkip){
-		
-      console.log('🔗 Now watching streamer: ', baseUrl + '/' + watch);
-
-      await page.goto(baseUrl + '/' + watch, {
-        "waitUntil": "networkidle2"
-      }); //https://github.com/puppeteer/puppeteer/blob/master/docs/api.md#pagegobackoptions
-
-      await clickWhenExist(page, cookiePolicyQuery);
-      await clickWhenExist(page, matureContentQuery); //Click on accept button
-
-      if (firstRun || resUndef) {
-        console.log('🔧 Setting lowest possible resolution..');
-        await clickWhenExist(page, streamPauseQuery);
-
-        await clickWhenExist(page, streamSettingsQuery);
-
-        await clickWhenExist(page, streamQualitySettingQuery);
-
-       try{
-	   var resolution = await queryOnWebsite(page, streamQualityQuery);
-        resolution = resolution[resolution.length - 1].attribs.id;
-        await page.evaluate((resolution) => {
-          document.getElementById(resolution).click();
-        }, resolution);
-		resUndef = false
-		}catch(e){
-			if(e){
-	resUndef = true
-    if (currentUrl == streamersUrl && watchAlt){
-      currentUrl = altstreamersUrl
-      getNewStreamer = true
-      sleep = 0 * 60000
-      setTimeout(() => {  console.log("\n❌Error! No channels with drops for the first option!❌\n"); }, 2000)
-    } 
-    else {
-      setTimeout(() => {  console.log("\n❌Error! No channels with drops at the moment, it will try again in 10 minutes❌\n"); }, 2000)
-      currentUrl = streamersUrl
-      sleep = 10 * 60000
-    }
-    }}
-    
 
 
-        await clickWhenExist(page, streamPauseQuery);
+      if (hasDrops.length > 1 || dropSkip) {
 
-        await page.keyboard.press('m'); //For unmute
-        firstRun = false;
-      }
+        console.log('🔗 Now watching streamer: ', baseUrl + '/' + watch);
 
+        await page.goto(baseUrl + '/' + watch, {
+          "waitUntil": "networkidle2"
+        }); //https://github.com/puppeteer/puppeteer/blob/master/docs/api.md#pagegobackoptions
 
-      if (browserScreenshot) {
-        await page.waitFor(1000);
-        fs.access(screenshotFolder, error => {
-          if (error) {
-            fs.promises.mkdir(screenshotFolder);
+        await clickWhenExist(page, cookiePolicyQuery);
+        await clickWhenExist(page, matureContentQuery); //Click on accept button
+
+        if (firstRun || resUndef) {
+          console.log('🔧 Setting lowest possible resolution..');
+          await clickWhenExist(page, streamPauseQuery);
+
+          await clickWhenExist(page, streamSettingsQuery);
+
+          await clickWhenExist(page, streamQualitySettingQuery);
+
+          try {
+            var resolution = await queryOnWebsite(page, streamQualityQuery);
+            resolution = resolution[resolution.length - 1].attribs.id;
+            await page.evaluate((resolution) => {
+              document.getElementById(resolution).click();
+            }, resolution);
+            resUndef = false
+          } catch (e) {
+            if (e) {
+              resUndef = true
+              if (currentUrl == streamersUrl && watchAlt) {
+                currentUrl = altstreamersUrl
+                getNewStreamer = true
+                sleep = 0 * 60000
+                setTimeout(() => { console.log("\n❌Error! No channels with drops for the first option!❌\n"); }, 2000)
+              }
+              else {
+                setTimeout(() => { console.log("\n❌Error! No channels with drops at the moment, it will try again in 10 minutes❌\n"); }, 2000)
+                currentUrl = streamersUrl
+                sleep = 10 * 60000
+              }
+            }
           }
-        });
-        await page.screenshot({
-          path: `${screenshotFolder}${watch}.png`
-        });
-        console.log('📸 Screenshot created: ' + `${watch}.png`);
-      }
 
-//		try{
-//      await clickWhenExist(page, sidebarQuery); //Open sidebar
-//      await page.waitFor(userStatusQuery); //Waiting for sidebar
-//      let status = await queryOnWebsite(page, userStatusQuery); //status jQuery    //NOT WORKING ANYMORE
-//      await clickWhenExist(page, sidebarQuery); //Close sidebar
-//		}
-      await page.reload({
-        "waitUntil": "networkidle2"
-      })
-      dropSkip=false}
+
+
+          await clickWhenExist(page, streamPauseQuery);
+
+          await page.keyboard.press('m'); //For unmute
+          firstRun = false;
+        }
+
+
+        if (browserScreenshot) {
+          await page.waitFor(1000);
+          fs.access(screenshotFolder, error => {
+            if (error) {
+              fs.promises.mkdir(screenshotFolder);
+            }
+          });
+          await page.screenshot({
+            path: `${screenshotFolder}${watch}.png`
+          });
+          console.log('📸 Screenshot created: ' + `${watch}.png`);
+        }
+
+        //		try{
+        //      await clickWhenExist(page, sidebarQuery); //Open sidebar
+        //      await page.waitFor(userStatusQuery); //Waiting for sidebar
+        //      let status = await queryOnWebsite(page, userStatusQuery); //status jQuery    //NOT WORKING ANYMORE
+        //      await clickWhenExist(page, sidebarQuery); //Close sidebar
+        //		}
+        await page.reload({
+          "waitUntil": "networkidle2"
+        })
+        dropSkip = false
+      }
       else {
-        dropSkip=true
+        dropSkip = true
         console.log('\n❌No Drops Available, Waiting 30 Minutes❌\n');
         sleep = 30 * 60000
       }
-if (getNewStreamer == false) {
-//console.log('💡 Account status:', status[0] ? status[0].children[0].data : "Unknown");   //NOT WORKING ANYMORE
-  console.log("🕒 Time: " + dayjs().format('HH:mm:ss'));
-  console.log('💤 Watching stream for ' + sleep / 60000 + ' minutes\n');
-}
+      if (getNewStreamer == false) {
+        //console.log('💡 Account status:', status[0] ? status[0].children[0].data : "Unknown");   //NOT WORKING ANYMORE
+        console.log("🕒 Time: " + dayjs().format('HH:mm:ss'));
+        console.log('💤 Watching stream for ' + sleep / 60000 + ' minutes\n');
+      }
 
 
       await page.waitFor(sleep);
-	  
-		
+
+
     } catch (e) {
       console.log('🤬 Error: ', e);
       console.log('Please visit the discord channel to receive help: https://discord.gg/s8AH4aZ');
@@ -274,7 +277,7 @@ async function readLoginData() {
 
       let input = await inquirer.askLogin();
 
-      fs.writeFile(configPath, JSON.stringify(input), function(err) {
+      fs.writeFile(configPath, JSON.stringify(input), function (err) {
         if (err) {
           console.log(err);
         }
@@ -329,14 +332,16 @@ async function spawnBrowser() {
 
 async function getAllStreamer(page) {
 
-  if (getNewStreamer == false){
-  console.log("=========================");}
+  if (getNewStreamer == false) {
+    console.log("=========================");
+  }
   await page.goto(baseUrl + currentUrl, {
     "waitUntil": "networkidle0"
   });
-  if (getNewStreamer == false){
-  console.log('🔐 Checking login...');
-  await checkLogin(page);}
+  if (getNewStreamer == false) {
+    console.log('🔐 Checking login...');
+    await checkLogin(page);
+  }
   console.log('📡 Checking active streamers...');
   await scroll(page, scrollTimes);
   const jquery = await queryOnWebsite(page, channelsQuery);
@@ -356,7 +361,7 @@ async function getAllStreamer(page) {
 
 
 async function checkLogin(page) {
-  
+
   let cookieSetByServer = await page.cookies();
   for (var i = 0; i < cookieSetByServer.length; i++) {
     if (cookieSetByServer[i].name == 'twilight-user') {
@@ -410,7 +415,7 @@ async function clickWhenExist(page, query) {
       await page.waitFor(500);
       return;
     }
-  } catch (e) {}
+  } catch (e) { }
 }
 
 
@@ -459,7 +464,7 @@ async function main() {
     browser,
     page
   } = await spawnBrowser();
-//  await getAllStreamer(page);
+  //  await getAllStreamer(page);
   console.log("=========================");
   await viewRandomPage(browser, page);
 };
