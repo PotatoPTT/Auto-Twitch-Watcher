@@ -9,6 +9,9 @@ Modified by PTT to barely work and new *autocollect* feature
 
 ## Features
 - **DROPS AUTO COLLECTION**
+- **MORE THAN 1 GO GET DROPS**
+- **PRIORITIZE DROPS**
+- **SLEEPS WHEN HAVE NO DROPS TO COLLECT**
 - 🎥 True HTTP Live Streaming support (Forget the #4000 error code)
 - 🔐 Cookie-based login
 - 📜 Auto accept cookie policy
