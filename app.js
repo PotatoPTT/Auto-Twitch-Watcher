@@ -227,6 +227,11 @@ async function viewRandomPage(browser, page) {
         console.log('💤 Watching stream for ' + sleep / 60000 + ' minutes\n');
       }
 
+      if (currentUrl == streamersUrl && watchAlt) {
+        currentUrl = altstreamersUrl;
+      } else if (currentUrl == altstreamersUrl) {
+        currentUrl = streamersUrl;
+      }
 
       await page.waitFor(sleep);
 
