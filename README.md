@@ -6,6 +6,9 @@
 <p align="center">
 Modified by PTT to barely work and new *autocollect* feature
 </p>
+<p align="center">
+ARCHIVED!
+</p>
 
 ## Features
 - **DROPS AUTO COLLECTION**
